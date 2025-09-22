@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-wrapper {
+            width: 90%;
+            max-width: 900px;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #videoPlayer {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+        .controls {
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+            border-top: 1px solid #eee;
+        }
+        label {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        #qualitySelector {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+        }
+        #message {
+            margin-top: 15px;
+            color: red;
+            font-weight: bold;
+        }
+        .back-link {
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← वापस मेनू पर जाएँ</a>
+
+    <div class="player-wrapper">
+        <video id="videoPlayer" controls autoplay></video>
+
+        <div class="controls">
+            <label for="qualitySelector">क्वालिटी चुनें:</label>
+            <select id="qualitySelector">
+                <option value="-1">स्वचालित (Adaptive)</option>
+            </select>
+        </div>
+    </div>
+    
+    <p id="message">वीडियो लोड हो रहा है...</p>
+
+    <script>
+        // URL से 'url' पैरामीटर को प्राप्त करें
+        const urlParams = new URLSearchParams(window.location.search);
+        const VIDEO_HLS_URL = urlParams.get('url'); 
+        
+        // अगर लिंक नहीं मिला तो एरर दिखाएँ
+        if (!VIDEO_HLS_URL) {
+            document.getElementById('message').textContent = 'Error: वीडियो लिंक नहीं मिला! कृपया index.html से सही लिंक भेजें।';
+            document.querySelector('.player-wrapper').style.display = 'none';
+        } else {
+            // कंसोल में लिंक दिखाएँ (Debugging के लिए)
+            console.log("Playing URL:", VIDEO_HLS_URL);
+
+            const video = document.getElementById('videoPlayer');
+            const qualitySelector = document.getElementById('qualitySelector');
+            const message = document.getElementById('message');
+
+            function initializePlayer() {
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    
+                    // 1. लोड सोर्स
+                    hls.loadSource(VIDEO_HLS_URL);
+                    
+                    // 2. अटैच मीडिया
+                    hls.attachMedia(video);
+
+                    // 3. क्वालिटी ऑप्शन्स लोड करें
+                    hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                        message.textContent = "वीडियो लोड हो चुका है।";
+                        // 'Automatic' के अलावा सभी ऑप्शन्स साफ़ करें
+                        qualitySelector.innerHTML = '<option value="-1">स्वचालित (Adaptive)</option>';
+                        
+                        data.levels.forEach((level, index) => {
+                            const option = document.createElement('option');
+                            let name = `${level.height}p`;
+                            if (level.bitrate) {
+                                // बिटरेट को Mbps में दिखाएं
+                                name += ` (${(level.bitrate / 1000000).toFixed(1)} Mbps)`;
+                            }
+                            option.value = index; 
+                            option.textContent = name;
+                            qualitySelector.appendChild(option);
+                        });
+                        
+                        // ऑटोप्ले की कोशिश करें
+                        video.play().catch(e => {
+                            message.textContent = "वीडियो चलाने के लिए प्ले बटन दबाएँ (Autoplay Blocked)";
+                            console.log("Autoplay blocked. User needs to interact.");
+                        });
+                    });
+
+                    // 4. क्वालिटी बदलने का फंक्शन
+                    qualitySelector.addEventListener('change', function() {
+                        // hls.currentLevel को चुने गए इंडेक्स पर सेट करें। -1 = Automatic.
+                        hls.currentLevel = parseInt(qualitySelector.value, 10);
+                        message.textContent = `क्वालिटी सेट की गई: ${qualitySelector.options[qualitySelector.selectedIndex].text}`;
+                    });
+
+                    // 5. एरर हैंडलिंग
+                    hls.on(Hls.Events.ERROR, function (event, data) {
+                        if (data.fatal) {
+                            message.textContent = `Error: वीडियो लोड नहीं हो रहा है या लिंक पुराना/खराब है। (Details: ${data.details})`;
+                            console.error('HLS Fatal Error:', data.details);
+                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR || data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                                // रिकवरी की कोशिश
+                                hls.startLoad();
+                            }
+                        }
+                    });
+
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari जैसे ब्राउज़र के लिए native सपोर्ट
+                    video.src = VIDEO_HLS_URL;
+                    video.addEventListener('loadedmetadata', function() {
+                        video.play();
+                        message.textContent = "आपका ब्राउज़र HLS को सीधे सपोर्ट करता है। क्वालिटी कंट्रोल उपलब्ध नहीं होगा।";
+                        // native सपोर्ट में मैन्युअल क्वालिटी कंट्रोल मुश्किल होता है
+                        qualitySelector.style.display = 'none'; 
+                        document.querySelector('.controls label').style.display = 'none';
+                    });
+                } else {
+                    message.textContent = 'माफ़ कीजिये, आपका ब्राउज़र HLS वीडियो स्ट्रीम को चलाने में सक्षम नहीं है।';
+                }
+            }
+            
+            // अगर लिंक मिला है, तो प्लेयर शुरू करें
+            initializePlayer();
+        }
+    </script>
+
+</body>
+</html>
