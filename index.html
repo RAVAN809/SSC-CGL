@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Courses & Video Player</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        .link-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        .link-list a {
+            display: block;
+            padding: 15px 20px;
+            background-color: #e9ecef;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: left;
+            border-left: 5px solid #007bff;
+        }
+        .link-list a:hover {
+            background-color: #cfe2ff;
+            color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .video-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+        }
+        .video-section h2 {
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        #videoLink {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #playButton {
+            padding: 10px 25px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        #playButton:hover {
+            background-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Batch Courses</h1>
+
+        <ul class="link-list">
+            <li><a href="English Spl-10 (JAIDEEP).html">English Spl-10 (JAIDEEP) 🧑‍🏫</a></li>
+            <li><a href="GS Spl-16 _ABHISHEK.html">GS Spl-16 (ABHISHEK) 📝</a></li>
+            <li><a href="GS Spl-17 _Live_VOD_.html">GS Spl-17 (Live/VOD) 📺</a></li>
+            <li><a href="Maths Spl_ _Recorded Batch_RAKESH_YADAV.html">Maths Spl (Recorded Batch) 📐</a></li>
+            <li><a href="Reas Spl-20 _Live_VOD_.html">Reasoning Spl-20 (Live/VOD) 🤔</a></li>
+        </ul>
+
+        <div class="video-section">
+            <h2>▶️ Video Player (play.html को कॉल करेगा)</h2>
+            <p>कोई भी वीडियो लिंक (HLS .m3u8 या MP4) नीचे पेस्ट करें और 'Play' बटन दबाएँ।</p>
+            
+            <input type="text" id="videoLink" placeholder="यहाँ वीडियो लिंक पेस्ट करें (जैसे: .m3u8 या .mp4)" 
+                value="https://edge.api.brightcove.com/playback/v1/accounts/6206459123001/videos/6346453473112/master.m3u8?bcov_auth=YOUR_AUTH_TOKEN_HERE">
+            
+            <button id="playButton">Play Video 🚀</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('playButton').addEventListener('click', function() {
+            const link = document.getElementById('videoLink').value;
+            if (link) {
+                // play.html को वीडियो लिंक पैरामीटर के साथ कॉल करें
+                window.location.href = `play.html?url=${encodeURIComponent(link)}`;
+            } else {
+                alert("कृपया वीडियो लिंक डालें!");
+            }
+        });
+    </script>
+</body>
+</html>
